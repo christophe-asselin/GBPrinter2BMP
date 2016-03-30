@@ -24,15 +24,18 @@ def listSerialWin():
 #Cross plataform
 def listSerial():
     system_name = platform.system()
+    #print system_name
     if system_name == "Windows":
+        #print "Scanning"
         # Scan for available ports.
         available = []
-        for i in range(256):
+        ports = ['COM%s' % (i + 1) for i in range(256)]
+        for port in ports:
             try:
-                s = serial.Serial(i)
-                available.append(i)
+                s = serial.Serial(port)
                 s.close()
-            except serial.SerialException:
+                available.append(port)
+            except (OSError, serial.SerialException):
                 pass
         return available
     elif system_name == "Darwin":

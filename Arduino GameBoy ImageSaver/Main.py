@@ -3,6 +3,8 @@ from arduinoSerial import openArduinoSerial
 from imgBMP import ThreadSaveImage
 import Queue
 import conf
+import msvcrt
+import time
 
 white = {'r' : 255, 'g' : 255, 'b' : 255} 
 lgrey = {'r' : 200, 'g' : 200, 'b' : 200}
@@ -76,7 +78,7 @@ except:
 
 def stateMachine(): 
     
-    # Launch save image Thread, Necesita optimizar
+    # Launch save image Thread, Necesita optimizar D:\Downloads\GB\Main.py
     gbImage=Queue.Queue()
     saveImage = ThreadSaveImage(gbImage)
     saveImage.start()
@@ -91,8 +93,16 @@ def stateMachine():
         # Uncomment to see GB => PC data.
         log = "stateMachineCmd: \t" + str(printCmd) + "\t | Data: \t" + str(GBresponse)                  
         print>>f, log 
-        print "stateMachineCmd: \t", printCmd, "\t | Data: \t", GBresponse
+        #print "stateMachineCmd: \t", printCmd, "\t | Data: \t", GBresponse
         
+        # wait for new data after each line
+        timeout = time.time() + 2
+        while (ardSerial.inWaiting() == 0) and timeout > time.time():
+            pass
+        if (ardSerial.inWaiting() == 0):
+            #print "timeout with 0 bytes inwaiting"
+            #print "Sending command to try to save current print data"
+            gbImage.put("SAVE")
         if (printCmd ==0):
             # Acknowledge Byte 1 (Must be 0x88).
             if(GBresponse == str(136)):

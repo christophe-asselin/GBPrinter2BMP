@@ -1,5 +1,5 @@
 # Arduino GameBoy ImageSaver configuration file
-FOLDER = "C:\\GB"
+FOLDER = "D:\\Downloads\\GB"
 
 
 
@@ -18,5 +18,13 @@ FOLDER = "C:\\GB"
 #    | 1         | 13      | SCK  |
 #    | 2         | 11      | SIN  |
 #    | 4         | GND     | GND  |
-#    | 6         | SOUT    | 12   |
+#    | 6         | 12      | SOUT |
 #    +-----------+---------+------+
+##************Switch 11 and 12 on Uno for some reason*****************
+
+
+#These are the colors I used on the cat5 cable I used to adapt the link cable
+#6 brown
+#2 blu
+#4 gw
+#1 grn

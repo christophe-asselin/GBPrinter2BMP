@@ -53,6 +53,7 @@ def bmp_write(header, pixels, filename):
     #write the header + pixels
     outfile.write(header_str + pixels)
     outfile.close()
+    print "Saved image to %s" % filename
 
 def row_padding(width, colordepth):
     '''returns any necessary row padding'''
@@ -160,11 +161,12 @@ def saveMatrix(iMatrix):
     imagePath = checkFilename(conf.FOLDER + "\GBimage")
     bmp_write(header, pixels, imagePath)
 
-def saveImage(iMatrix):
+def saveImage(iMatrix,i):
+    print "Saving %d image bands..." % i
     
     header = default_bmp_header
     header["width"] = 160
-    header["height"] = 144
+    header["height"] = (i)*16
     
     pixels = ''
     for row in range(header['height']-1,-1,-1): # (BMPs are L to R from the bottom L row to top R row)
@@ -180,7 +182,8 @@ def saveImage(iMatrix):
                 blue = 00
                 pixels = pixels + pack_color(red, green, blue)
                 print "ERROR:"
-                print iMatrix[row][column]                                      
+                print iMatrix[row][column]    
+                break				
         pixels += row_padding(header['width'], header['colordepth'])
     imagePath = checkFilename(conf.FOLDER + "\GBimage")
     bmp_write(header, pixels, imagePath)
@@ -199,17 +202,30 @@ class ThreadSaveImage(threading.Thread):
             qData = self.gbImageQueue.get(True)
             if qData=='KILL':
                 break                
-            brand = qData
-            
-            try:
-                brand = reorderBrand(brand)
-            except:
-                print "Error: reorderBrand"
-                print brand
-            for a in brand:
-                gbImage.append(a)
-            i = i + 1
-            if(i==9):
-                saveImage(gbImage)
-                gbImage = []
-                i=0
+            if qData=='SAVE':
+                if (i>7):
+                    #print "Saving..."
+                    saveImage(gbImage,i)
+                    qData = ''
+                    gbImage = []
+                    i=0               
+                else:
+                    print "Waiting for Print Data..."
+                    qData = ''
+            if qData!='':
+                print "Compiling Print Band # %d" % i
+                brand = qData
+                
+                try:
+                    brand = reorderBrand(brand)
+                except:
+                    print "Error: reorderBrand"
+                    print brand
+                    break
+                for a in brand:
+                    gbImage.append(a)
+                i = i + 1
+                #if(i==9):
+                #    saveImage(gbImage)
+                #    gbImage = []
+                #    i=0
