@@ -3,7 +3,6 @@ from arduinoSerial import openArduinoSerial
 from imgBMP import ThreadSaveImage
 import Queue
 import conf
-import msvcrt
 import time
 
 white = {'r' : 255, 'g' : 255, 'b' : 255} 
