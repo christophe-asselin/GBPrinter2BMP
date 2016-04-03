@@ -2,6 +2,7 @@
 import struct, random
 import threading, Queue
 import conf
+import sys
 
 # modified from http://pseentertainmentcorp.com/smf/index.php?topic=2034.0
 
@@ -27,27 +28,31 @@ default_bmp_header = {'mn1':66,             # B
                       'importantcolors':0}
 
 def bmp_write(header, pixels, filename):
-    '''It takes a header (based on default_bmp_header), 
+    '''It takes a header (based on default_bmp_header),
     the pixel data (from structs, as produced by get_color and row_padding),
     and writes it to filename'''
     header_str = ""
     header_str += struct.pack('<B', header['mn1'])
     header_str += struct.pack('<B', header['mn2'])
+    header_str2 = ""
+    header_str2 += struct.pack('<H', header['undef1'])
+    header_str2 += struct.pack('<H', header['undef2'])
+    header_str2 += struct.pack('<L', header['offset'])
+    header_str2 += struct.pack('<L', header['headerlength'])
+    header_str2 += struct.pack('<L', header['width'])
+    header_str2 += struct.pack('<L', header['height'])
+    header['colorplanes'] = 1
+    header_str2 += struct.pack('<H', header['colorplanes'])
+    header_str2 += struct.pack('<H', header['colordepth'])
+    header_str2 += struct.pack('<L', header['compression'])
+    header_str2 += struct.pack('<L', header['imagesize'])
+    header_str2 += struct.pack('<L', header['res_hor'])
+    header_str2 += struct.pack('<L', header['res_vert'])
+    header_str2 += struct.pack('<L', header['palette'])
+    header_str2 += struct.pack('<L', header['importantcolors'])
+    header["filesize"] = len(header_str) + len(header_str2) + len(pixels) + 4
     header_str += struct.pack('<L', header['filesize'])
-    header_str += struct.pack('<H', header['undef1'])
-    header_str += struct.pack('<H', header['undef2'])
-    header_str += struct.pack('<L', header['offset'])
-    header_str += struct.pack('<L', header['headerlength'])
-    header_str += struct.pack('<L', header['width'])
-    header_str += struct.pack('<L', header['height'])
-    header_str += struct.pack('<H', header['colorplanes'])
-    header_str += struct.pack('<H', header['colordepth'])
-    header_str += struct.pack('<L', header['compression'])
-    header_str += struct.pack('<L', header['imagesize'])
-    header_str += struct.pack('<L', header['res_hor'])
-    header_str += struct.pack('<L', header['res_vert'])
-    header_str += struct.pack('<L', header['palette'])
-    header_str += struct.pack('<L', header['importantcolors'])
+    header_str += header_str2
     #create the outfile
     outfile = open(filename, 'wb')
     #write the header + pixels
@@ -182,12 +187,63 @@ def saveImage(iMatrix,i):
                 blue = 00
                 pixels = pixels + pack_color(red, green, blue)
                 print "ERROR:"
-                print iMatrix[row][column]    
-                break				
+                print iMatrix[row][column]
+                break
+            #if red == 255:
+            #    sys.stdout.write('#')
+            #elif red > 128:
+            #    sys.stdout.write('$')
+            #elif red > 64:
+            #    sys.stdout.write('*')
+            #elif red == 0:
+            #    sys.stdout.write(' ')
+        #sys.stdout.write('\r\n')
         pixels += row_padding(header['width'], header['colordepth'])
     imagePath = checkFilename(conf.FOLDER + "\GBimage")
     bmp_write(header, pixels, imagePath)
     
+def asciiArt(iMatrix):
+    
+    header = default_bmp_header
+    header["width"] = 160
+    header["height"] = 16
+    
+    pixels = ''
+    for row in range(0,header['height'],1): # (BMPs are L to R from the bottom L row to top R row)
+        for column in range(header['width']):
+            try:
+                red = iMatrix[row][column]['r']
+                green = iMatrix[row][column]['g']
+                blue = iMatrix[row][column]['b']
+            except:
+                red = 255
+                green = 0
+                blue = 00
+                print "ERROR:"
+                print iMatrix[row][column]
+                break
+            if red == 255:
+                sys.stdout.write('@')
+            elif red > 227:
+                sys.stdout.write('%')
+            elif red > 199:
+                sys.stdout.write('#')
+            elif red > 171:
+                sys.stdout.write('*')
+            elif red > 143:
+                sys.stdout.write('+')
+            elif red > 115:
+                sys.stdout.write('=')
+            elif red > 87:
+                sys.stdout.write('-')
+            elif red > 59:
+                sys.stdout.write(':')
+            elif red > 31:
+                sys.stdout.write('.')
+            elif red < 31:
+                sys.stdout.write(' ')
+        sys.stdout.write('\r\n')
+	
 class ThreadSaveImage(threading.Thread):
     """Threaded Url Grab"""
     
@@ -197,13 +253,15 @@ class ThreadSaveImage(threading.Thread):
                  
     def run(self):
         gbImage = []
+        asciiImage = []
         i=0
         while True:
+            asciiImage = []
             qData = self.gbImageQueue.get(True)
             if qData=='KILL':
                 break                
             if qData=='SAVE':
-                if (i>7):
+                if (i>5):
                     #print "Saving..."
                     saveImage(gbImage,i)
                     qData = ''
@@ -213,7 +271,7 @@ class ThreadSaveImage(threading.Thread):
                     print "Waiting for Print Data..."
                     qData = ''
             if qData!='':
-                print "Compiling Print Band # %d" % i
+                #print "Compiling Print Band # %d" % i
                 brand = qData
                 
                 try:
@@ -224,6 +282,8 @@ class ThreadSaveImage(threading.Thread):
                     break
                 for a in brand:
                     gbImage.append(a)
+                    asciiImage.append(a)
+                asciiArt(asciiImage)
                 i = i + 1
                 #if(i==9):
                 #    saveImage(gbImage)

@@ -24,7 +24,13 @@ FOLDER = "D:\\Downloads\\GB"
 
 
 #These are the colors I used on the cat5 cable I used to adapt the link cable
-#6 brown
+#1 grn
 #2 blu
 #4 gw
-#1 grn
+#6 brown
+
+#my purple cable's actual colors
+#1 orange
+#2 blue
+#4 black
+#6 green
