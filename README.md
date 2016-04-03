@@ -8,3 +8,6 @@ This also makes it possible to print images of any length, not just squares from
 See ascii art of your image in the console as it is processed from the GB!
 
 Also added the changes from yohanes which fixes the bmp header to be more compatible.
+
+
+Remember to set the folder location in conf.py!
